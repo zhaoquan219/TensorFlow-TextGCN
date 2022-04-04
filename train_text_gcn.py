@@ -196,8 +196,10 @@ for step in tqdm(range(1000)):
 
         
         
-train_graph = tfg.Graph(x=train_x, edge_index=train_edge_index, edge_weight=train_edge_weight)
-test_graph = tfg.Graph(x=test_x, edge_index=test_edge_index, edge_weight=test_edge_weight)
+train_graph = tfg.Graph(x=train_x, 
+                        edge_index=train_edge_index, edge_weight=train_edge_weight)
+test_graph = tfg.Graph(x=test_x, 
+                       edge_index=test_edge_index, edge_weight=test_edge_weight)
 
 model = GCNModel()
 model.gcn0.cache_normed_edge(train_graph)
@@ -206,7 +208,8 @@ model.gcn0.cache_normed_edge(test_graph)
 
 @tf.function
 def forward(graph, training=False):
-    logits = model([graph.x, graph.edge_index, graph.edge_weight], cache=graph.cache, training=training)
+    logits = model([graph.x, graph.edge_index, graph.edge_weight], 
+                   cache=graph.cache, training=training)
     logits = logits[num_words:]
     return logits
 
