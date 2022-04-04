@@ -193,3 +193,36 @@ for step in tqdm(range(1000)):
         corrects = tf.cast(tf.equal(preds, test_labels), tf.float32)
         accuracy = tf.reduce_mean(corrects)
         print("step = {}\tloss = {}\ttest_accuracy = {}".format(step, mean_loss, accuracy))
+
+        
+        
+train_graph = tfg.Graph(x=train_x, edge_index=train_edge_index, edge_weight=train_edge_weight)
+test_graph = tfg.Graph(x=test_x, edge_index=test_edge_index, edge_weight=test_edge_weight)
+
+model = GCNModel()
+model.gcn0.cache_normed_edge(train_graph)
+model.gcn0.cache_normed_edge(test_graph)
+
+
+@tf.function
+def forward(graph, training=False):
+    logits = model([graph.x, graph.edge_index, graph.edge_weight], cache=graph.cache, training=training)
+    logits = logits[num_words:]
+    return logits
+
+
+optimizer = tf.keras.optimizers.Adam(learning_rate)
+for epoch in tqdm(range(1000)):
+    with tf.GradientTape() as tape:
+        logits = forward(train_graph, training=True)
+        mean_loss = compute_loss(logits, train_labels)
+
+    vars = tape.watched_variables()
+    grads = tape.gradient(mean_loss, vars)
+    optimizer.apply_gradients(zip(grads, vars))
+
+    if epoch % 10 == 0:
+        logits = forward(test_graph)
+        evaluate(logits, test_labels)
+
+        
